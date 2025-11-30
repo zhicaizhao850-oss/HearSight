@@ -419,7 +419,6 @@ ASR Backend 是HearSight的语音识别服务组件。
 ### 启动流程概览
 
 ![ASR Backend 启动流程概览图](https://oss-liuchengtu.hudunsoft.com/userimg/3c/3ca71bc17320b25b4f08778e21f6840e.png)
-![](https://oss-liuchengtu.hudunsoft.com/userimg/3c/3ca71bc17320b25b4f08778e21f6840e.png)
 
 <a id="asr-cloud"></a>
 
