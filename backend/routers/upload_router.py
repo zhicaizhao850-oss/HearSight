@@ -16,6 +16,7 @@ from backend.services.upload_service import (create_audio_placeholder,
 from backend.db.transcript_base_crud import update_transcript_audio_path
 from backend.db.job_result_store import update_job_result_paths
 from backend.queues.tasks import process_job_task
+from backend.db.job_store import create_job
 
 
 # 数据结构定义
@@ -128,7 +129,9 @@ async def upload_file(
             result["placeholder_url"] = f"/static/{placeholder_name}"
 
         db_url = request.app.state.db_url
-        job_id = str(uuid.uuid4())
+        #job_id = str(uuid.uuid4())
+
+        job_id = create_job(db_url, f"upload://{safe_filename}")
         logger.info(f"创建处理任务: job_id={job_id}, file={safe_filename}")
 
         result["job_id"] = job_id

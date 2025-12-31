@@ -48,8 +48,9 @@ def normalize_segments(
         current = segments[i].copy()
         merged = False
 
-        # 优先检查句子合并（基于标点）
-        if (
+        # AI Agent: 优先检查句子合并（基于标点）- 改为递归合并
+        # 使用 while 循环实现递归合并，只要句子以标点结尾就继续合并下一句
+        while (
             merge_sentences
             and ends_with_punctuation(current.get("sentence", ""))
             and i + 1 < len(segments)
@@ -58,14 +59,20 @@ def normalize_segments(
             if can_merge_with_next(current, next_item):
                 current["sentence"] += next_item["sentence"]  # 无空格，直接连接
                 current["end_time"] = next_item.get("end_time", current.get("end_time"))
-                merged_results.append(current)
-                i += 2
+                i += 1  # AI Agent: 移动到下一句，继续检查是否能继续合并
                 merged = True
+            else:
+                break  # AI Agent: 不能合并（说话人不同或下一句为空），退出循环
+
+        # AI Agent: 如果进行了标点合并，将合并后的结果添加到结果列表
+        if merged:
+            merged_results.append(current)
+            i += 1  # AI Agent: 移动到下一个未处理的句子
+            continue  # AI Agent: 跳过后续的短句合并检查
 
         # 检查短句子合并
         if (
-            not merged
-            and merge_short_sentences
+            merge_short_sentences
             and i + 1 < len(segments)
         ):
             sent_length = len(current.get("sentence", "").strip())

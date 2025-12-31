@@ -1,4 +1,4 @@
-yt-dlp
+﻿yt-dlp
 # 用于HuggingFace风格分词器（AutoTokenizer）
 modelscope
 # 用于OpenAI tiktoken分词
