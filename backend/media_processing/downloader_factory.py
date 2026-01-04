@@ -18,6 +18,7 @@ if backend_dir not in sys.path:
 from backend.common_interfaces import DownloadResult
 from .audio.download.xiaoyuzhou.xiaoyuzhou_downloader import XiaoyuzhouDownloader
 from .video.download.bilibili.bilibili_downloader import BilibiliDownloader
+from .direct_file_downloader import DirectFileDownloader
 
 logger = logging.getLogger(__name__)
 
@@ -67,9 +68,16 @@ class MediaDownloaderFactory:
             源类型标识符，若无法识别则返回None
         """
         url_lower = url.lower()
+        # AI Agent: 先检查是否为特定平台
         for source_type, pattern in self._SOURCE_PATTERNS.items():
             if re.search(pattern, url_lower, re.IGNORECASE):
                 return source_type
+        
+        # AI Agent: 如果不是特定平台，检查是否为直接文件URL（HTTP/HTTPS）
+        if url_lower.startswith(('http://', 'https://')):
+            # AI Agent: 判断为直接文件链接
+            return 'direct_file'
+        
         return None
 
     def _get_downloader(self, source_type: str) -> object:
@@ -101,6 +109,9 @@ class MediaDownloaderFactory:
             )
         elif source_type == 'xiaoyuzhou':
             downloader = XiaoyuzhouDownloader(output_dir=self.output_dir)
+        elif source_type == 'direct_file':
+            # AI Agent: 直接文件下载器，用于处理OSS、CDN等直接文件链接
+            downloader = DirectFileDownloader(output_dir=self.output_dir)
         else:
             raise ValueError(f"不支持的媒体源类型: {source_type}")
 
@@ -130,8 +141,12 @@ class MediaDownloaderFactory:
 
             downloader = self._get_downloader(source_type)
 
+            # AI Agent: 根据源类型调用不同的下载方法
             if source_type == 'xiaoyuzhou':
                 result = downloader.download_episode(url, progress_callback=progress_callback)
+            elif source_type == 'direct_file':
+                # AI Agent: 直接文件使用统一的download方法
+                result = downloader.download(url, progress_callback=progress_callback)
             else:
                 result = downloader.download_video(url, progress_callback=progress_callback)
 

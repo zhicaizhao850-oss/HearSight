@@ -10,7 +10,7 @@ export const parseUrl = (input: string): ParseResult => {
   const hasProtocol = /^https?:\/\//i.test(trimmed);
   const withProtocol = hasProtocol ? trimmed : `https://${trimmed}`
 
-  // 支持的平台
+  // AI Agent: 支持的平台列表
   const supportedPlatforms = [
     { name: 'B站', pattern: /^(https?:\/\/)?(www\.)?bilibili\.com\//i, domain: 'bilibili.com' },
     { name: 'B站短链', pattern: /^(https?:\/\/)?b23\.tv\//i, domain: 'b23.tv' },
@@ -19,36 +19,53 @@ export const parseUrl = (input: string): ParseResult => {
     { name: '小宇宙播客', pattern: /^(https?:\/\/)?(www\.)?xiaoyuzhoufm\.com\//i, domain: 'xiaoyuzhoufm.com' }
   ]
 
-  // 同时检查原始输入和补全协议后的URL
+  // AI Agent: 同时检查原始输入和补全协议后的URL
   const platform = supportedPlatforms.find(p => 
     p.pattern.test(trimmed) || p.pattern.test(withProtocol)
   )
-  if (!platform) {
-    return { error: '不支持的平台，仅支持 B站、YouTube、小宇宙播客等平台的链接' }
+
+  // AI Agent: 如果匹配到特定平台，按平台逻辑处理
+  if (platform) {
+    // 对于B站，解析具体ID
+    if (platform.domain === 'bilibili.com' || platform.domain === 'b23.tv') {
+      const mBV = trimmed.match(/\/video\/(BV[0-9A-Za-z]+)/)
+      if (mBV) return { kind: 'BV', id: mBV[1] }
+
+      const mAv = trimmed.match(/\/video\/(av\d+)/)
+      if (mAv) return { kind: 'av', id: mAv[1] }
+
+      const mEp = trimmed.match(/\/bangumi\/play\/(ep\d+)/)
+      if (mEp) return { kind: 'ep', id: mEp[1] }
+
+      const mSs = trimmed.match(/\/bangumi\/play\/(ss\d+)/)
+      if (mSs) return { kind: 'ss', id: mSs[1] }
+
+      const mMd = trimmed.match(/\/bangumi\/media\/(md\d+)/)
+      if (mMd) return { kind: 'md', id: mMd[1] }
+
+      return { error: '未能从 B站链接中解析出 BV/av/ep/ss/md 信息，请检查链接是否正确' }
+    }
+
+    // 对于其他平台，直接返回URL作为ID
+    return { kind: 'url', id: withProtocol, platform: platform.name }
   }
 
-  // 对于B站，解析具体ID
-  if (platform.domain === 'bilibili.com' || platform.domain === 'b23.tv') {
-    const mBV = trimmed.match(/\/video\/(BV[0-9A-Za-z]+)/)
-    if (mBV) return { kind: 'BV', id: mBV[1] }
-
-    const mAv = trimmed.match(/\/video\/(av\d+)/)
-    if (mAv) return { kind: 'av', id: mAv[1] }
-
-    const mEp = trimmed.match(/\/bangumi\/play\/(ep\d+)/)
-    if (mEp) return { kind: 'ep', id: mEp[1] }
-
-    const mSs = trimmed.match(/\/bangumi\/play\/(ss\d+)/)
-    if (mSs) return { kind: 'ss', id: mSs[1] }
-
-    const mMd = trimmed.match(/\/bangumi\/media\/(md\d+)/)
-    if (mMd) return { kind: 'md', id: mMd[1] }
-
-    return { error: '未能从 B站链接中解析出 BV/av/ep/ss/md 信息，请检查链接是否正确' }
+  // AI Agent: 如果没有匹配到特定平台，检查是否为有效的HTTP/HTTPS URL（支持直接文件链接）
+  // 验证是否为有效的URL格式
+  try {
+    const urlObj = new URL(withProtocol)
+    // 检查协议是否为 http 或 https
+    if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
+      return { error: '不支持的协议，仅支持 HTTP 或 HTTPS 链接' }
+    }
+    
+    // AI Agent: 如果是有效的HTTP/HTTPS URL，允许作为直接文件链接使用
+    // 后端ASR服务支持直接的文件URL（如OSS链接、CDN链接等）
+    return { kind: 'url', id: withProtocol, platform: '直接链接' }
+  } catch (e) {
+    // URL格式无效
+    return { error: '不支持的平台，仅支持 B站、YouTube、小宇宙播客等平台的链接，或有效的 HTTP/HTTPS 文件链接' }
   }
-
-  // 对于其他平台，直接返回URL作为ID
-  return { kind: 'url', id: withProtocol, platform: platform.name }
 }
 
 export const parseBilibiliUrl = (input: string): ParseResult => {
