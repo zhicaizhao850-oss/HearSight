@@ -99,9 +99,9 @@ def download_audio(url: str, max_size: int = 100 * 1024 * 1024) -> str:
 
 
 def _extract_segments_from_result(
-    res: List[Dict],
-    merge_sentences: bool = True,
-    merge_short_sentences: bool = True,
+        res: List[Dict],
+        merge_sentences: bool = True,
+        merge_short_sentences: bool = True,
 ) -> List[Dict]:
     """从 funASR 推理结果中提取并规范化分段信息
 
@@ -163,11 +163,11 @@ def _extract_segments_from_result(
 
 
 def process(
-    audio_path: str,
-    merge_sentences: bool = True,
-    merge_short_sentences: bool = True,
-    batch_size_s: int = 300,
-    hotword: str = "Obsidian"
+        audio_path: str,
+        merge_sentences: bool = True,
+        merge_short_sentences: bool = True,
+        batch_size_s: int = 300,
+        hotword: Optional[str] = None
 ) -> List[Dict]:
     """处理音频并返回标准化列表
 
@@ -176,7 +176,7 @@ def process(
         merge_sentences: 是否合并句子
         merge_short_sentences: 是否合并少于4个字的句子到下一句
         batch_size_s: 批处理大小（秒）
-        hotword: 热词
+        hotword: 热词（可选，如果不提供则使用默认热词列表）
 
     Returns:
         list[dict(index, spk_id, sentence, start_time, end_time)]
@@ -204,7 +204,7 @@ def process(
         res = model.generate(
             input=actual_path,
             batch_size_s=batch_size_s,
-            hotword=hotword,
+            hotword="obsidian 乾坤未定 考啥 重点线 六月高考梦最圆",
         )
 
         if not res:
